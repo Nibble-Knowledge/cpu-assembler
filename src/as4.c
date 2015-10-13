@@ -176,7 +176,7 @@ int main(int argc, char **argv)
 								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
 								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
 								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, tokens, baseaddr, numlabels, &numunknownlabels, bits);
+								address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits);
 								/* Add this to the output buffer. */
 								addinst(outbuf, LOD, address, &bits, &bytes);
 							}
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
 								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
 								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
 								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, tokens, baseaddr, numlabels, &numunknownlabels, bits);
+								address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits);
 								/* Add this to the output buffer. */
 								addinst(outbuf, STR, address, &bits, &bytes);
 							}
@@ -214,7 +214,7 @@ int main(int argc, char **argv)
 								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
 								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
 								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, tokens, baseaddr, numlabels, &numunknownlabels, bits);
+								address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits);
 								/* Add this to the output buffer. */
 								addinst(outbuf, ADD, address, &bits, &bytes);
 							}
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
 								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
 								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
 								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, tokens, baseaddr, numlabels, &numunknownlabels, bits);
+								address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits);
 								/* Add this to the output buffer. */
 								addinst(outbuf, NND, address, &bits, &bytes);
 							}
@@ -260,7 +260,7 @@ int main(int argc, char **argv)
 								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
 								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
 								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, tokens, baseaddr, numlabels, &numunknownlabels, bits);
+								address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits);
 								/* Add this to the output buffer. */
 								addinst(outbuf, JMP, address, &bits, &bytes);
 							}
@@ -736,9 +736,9 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 	}
 }
 
-/* findlabel() determines the memory address that follows the opcode. If the memory address is already a number, it adds the base address to this and returns the result */
+/* findlabel() determines the memory address that follows the opcode. If the memory address is already a number, and returns it */
 /* If it is an undeclared label, it adds the label name and the instruction location to the "unknown labels" collection. If the label is declared, it returns it's address */
-unsigned short int findlabel(label **unknownlabels, label **labels, const char *labelstr, unsigned short int baseaddr, unsigned long long numlabels, unsigned long long *numunknownlabels, unsigned long long bits)
+unsigned short int findlabel(label **unknownlabels, label **labels, const char *labelstr, unsigned long long numlabels, unsigned long long *numunknownlabels, unsigned long long bits)
 {
 	/* endptr is used to check if the strtol finds a valid number. */
 	/* If not, it's likely a label. */
@@ -844,8 +844,8 @@ unsigned short int findlabel(label **unknownlabels, label **labels, const char *
 	/* If there is no error from strtol, the token after the assembly instruction is probably a numerical value. */
 	else
 	{
-		/* So add the base address to it, and return it as is. */
-		address = (tempaddress + baseaddr);
+		/* Assume the programmer knows what he's doing and directly assign it. */
+		address = tempaddress;
 	}
 	/* Return the final address found. */
 	return address;
