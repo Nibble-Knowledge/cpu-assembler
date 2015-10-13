@@ -21,7 +21,7 @@ The Nibble Knowledge CPU has 8 instructions which are split into two different t
 
 ### 2 data types ###
 AS4 recognises two inbuilt data types:
-* Numberical values. Format: ".data SIZE INITIAL VALUE"
+* Numberical values. Format: ".data SIZE INITIALVALUE"
 * Strings, both plain and zero terminated. Format: ".ascii "String"" or ".asciiz "String""
 	* Strings must start and end with double quotes.
 	* AS4 recognises standard escape characters
