@@ -16,6 +16,7 @@
 ;; START NIbble-Knowledge code ;;
 
 ;; Instruction Section ;;
+
 Start: 
 	LOD n15
 	ADD n2
@@ -46,6 +47,15 @@ n13: .data 1 13 ; b1101
 n14: .data 1 14 ; b1110
 n15: .data 1 15 ; b1111
 
+derp: .data 6 0x454534
+
+derp3: .ascii "hey there"
+derp4: .ascii "hey\" there\n"
+derp5: .asciiz "hey there"
+derp6: .asciiz "hey\" there\n"
+
 sum: .data 1 0
+
+
 
 
