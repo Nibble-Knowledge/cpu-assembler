@@ -6,6 +6,13 @@ AS4
 
 AS4 is the low level assembler on written in C99 for the Nibble Knowledge CPU. It is under 700 lines of executable code, and recognises only 12 contructs:
 
+## Useage ###
+There are only two invocations of as4:
+./as4 -b BASE_ADDRESS INPUT OUTPUT
+./as4 INPUT OUTPUT
+
+Where INPUT is your assembly language text file, OUTPUT is your binary file output, and BASE_ADDRESS is the numerical value (in hex, octal, decimal or binary) of the base address for compilation where all memory addresses are calculated relative to.
+
 ### 8 instructions ###
 The Nibble Knowledge CPU has 8 instructions which are split into two different types:
 * Solitary instructions that do not require a memory address (has the format INST)
