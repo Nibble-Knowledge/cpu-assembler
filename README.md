@@ -8,8 +8,8 @@ AS4 is the low level assembler on written in C99 for the Nibble Knowledge CPU. I
 
 ## Useage ###
 There are only two invocations of as4:
-./as4 -b BASE_ADDRESS INPUT OUTPUT
-./as4 INPUT OUTPUT
+* ./as4 -b BASE_ADDRESS INPUT OUTPUT
+* ./as4 INPUT OUTPUT
 
 Where INPUT is your assembly language text file, OUTPUT is your binary file output, and BASE_ADDRESS is the numerical value (in hex, octal, decimal or binary) of the base address for compilation where all memory addresses are calculated relative to.
 
