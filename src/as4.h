@@ -1,10 +1,13 @@
 #ifndef _AS4_H_
 #define _AS4_H_
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <stdint.h>
 #include <errno.h>
 /* This is a 4-bit assembler for the Nibble Knowledge computer */
 /* Hacked together by Ryan Harvey Oct 12 2015 - for a minicompter design that should be from the 60s! */
