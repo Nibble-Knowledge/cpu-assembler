@@ -34,6 +34,7 @@ An example of useage would be "number: .data 1 2", which is using the label "num
 Comments in AS4 start with a semicolon, ";".
 
 ### Example code ###
+```
 ; This program reads in integers and adds them together
 ; until a negative number is read in.  Then it outputs
 ; the sum (not including the last number).
@@ -91,4 +92,4 @@ derp5: .asciiz "hey there"
 derp6: .asciiz "hey\" there\n"
 
 sum: .data 1 0
-
+```
