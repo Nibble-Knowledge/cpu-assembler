@@ -18,14 +18,9 @@ debug: phony
 	$(MAKE) -C src
 	cp src/as4 .
 
-#docs:
-#	rm -f docs.html
-#	doxygen
-#	ln -s html/index.html docs.html
-
 clean:
 	$(MAKE) -C src clean
-	rm -rf as4
+	rm -rf as4 gmon.out
 
 phony: 
 	true
