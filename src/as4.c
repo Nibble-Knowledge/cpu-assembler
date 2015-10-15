@@ -769,7 +769,7 @@ unsigned short int findlabel(label **unknownlabels, label **labels, const char *
 			exit(9);
 		}
 		/* Copy the name of the label into the temporary string pointer for comparison. */
-		memcpy(tempstr, labelstr, (strlen(labelstr) - 1));
+		memcpy(tempstr, labelstr, strlen(labelstr));
 		/* Check that the pointer to the pointer to the collection of labels is valid .*/
 		if(labels != NULL) 
 		{	
