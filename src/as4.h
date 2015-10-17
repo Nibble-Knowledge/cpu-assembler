@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <stdint.h>
 #include <errno.h>
+#include <ctype.h>
 /* This is a 4-bit assembler for the Nibble Knowledge computer */
 /* Hacked together by Ryan Harvey Oct 12 2015 - for a minicompter design that should be from the 60s! */
 /* This was essentially hacked together in a single day - beware! */
