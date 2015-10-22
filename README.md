@@ -39,8 +39,11 @@ Labels are of the format "NAME:". They are used to refer to memory locations wit
 An example of useage would be "number: .data 1 2", which is using the label "number" to point to a data element of 1 nibble in size with the initial value of 2.
 
 Labels when referenced in instructions can be used in two forms:
-* INST LABEL - where the instruction INST simply references the memory location pointed to by LABEL
-* INST LABEL[OFFSET] - where the instruction INST references the memory location pointed to by LABEL + OFFSET. OFFSET must be a hexidecimal value, optionally preceded by "0x".
+* INST LABEL
+	* Where the instruction INST simply references the memory location pointed to by LABEL
+* INST LABEL[OFFSET]
+	* Where the instruction INST references the memory location pointed to by LABEL + OFFSET. OFFSET must be a hexidecimal value, optionally preceded by "0x".
+
 An example of usage would be "LOD sum[F]", which loads the memory address pointed to by "sum" plus the offset of "F" (15 in decimal) into the accumulator.
 
 ### Comments ###
