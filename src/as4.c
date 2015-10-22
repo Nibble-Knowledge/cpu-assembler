@@ -407,7 +407,7 @@ int main(int argc, char **argv)
 		if((bits % 8) != 0)
 		{
 			/* So we add a single NOP. */
-			addinst(outbuf, NOP, NOADDR, &bits, &bytes);
+			addinst(outbuf, NOP, EOFADDR, &bits, &bytes);
 		}
 		/* If we get here, we've read the entire input file and we don't need it anymore. */
 		fclose(input);
@@ -775,7 +775,7 @@ unsigned short int findlabel(label **unknownlabels, label **labels, const char *
 		/* Remove any possible whitespace */
 		for(i = 0; i < strlen(tempstr); i++)
 		{
-			if(isspace(tempstr[i]))
+			if(isspace((unsigned char)tempstr[i]))
 			{
 				tempstr[i] = '\0';
 				break;
