@@ -29,9 +29,11 @@
 /* For instructions HLT, NOP, and CXA MEMLOC is ignored and NOADDR below is used */
 
 /* These are the default memory locations for memory locations when nothing is specified */
+#ifdef NICEMISTAKES
+#define NOADDR 0x4444 
+#elif
 #define NOADDR 0x0000
-/* EOFADDR is not currently used */
-#define EOFADDR 0x4444 
+#endif
 #define UNKNOWNADDR 0xFFFF
 
 /* The singular global variable - what line of the assembly file we are on. Helps with error messages */

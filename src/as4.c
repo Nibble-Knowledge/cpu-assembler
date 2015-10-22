@@ -775,7 +775,7 @@ unsigned short int findlabel(label **unknownlabels, label **labels, const char *
 		/* Remove any possible whitespace */
 		for(i = 0; i < strlen(tempstr); i++)
 		{
-			if(isspace(tempstr[i]) != 0)
+			if(isspace(tempstr[i]))
 			{
 				tempstr[i] = '\0';
 				break;
