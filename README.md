@@ -7,7 +7,7 @@ AS4
 
 AS4 is the low level assembler on written in C99 for the Nibble Knowledge CPU. It is under 700 lines of executable code, and recognises only 12 contructs:
 
-## Useage ###
+### Useage ###
 There are only two invocations of as4:
 * ./as4 -b BASE_ADDRESS INPUT OUTPUT
 * ./as4 INPUT OUTPUT
@@ -38,8 +38,13 @@ AS4 recognises two inbuilt data types:
 Labels are of the format "NAME:". They are used to refer to memory locations without having to memorise or calculate number.
 An example of useage would be "number: .data 1 2", which is using the label "number" to point to a data element of 1 nibble in size with the initial value of 2.
 
+Labels when referenced in instructions can be used in two forms:
+* INST LABEL - where the instruction INST simply references the memory location pointed to by LABEL
+* INST LABEL[OFFSET] - where the instruction INST references the memory location pointed to by LABEL + OFFSET. OFFSET must be a hexidecimal value, optionally preceded by "0x".
+An example of usage would be "LOD sum[F]", which loads the memory address pointed to by "sum" plus the offset of "F" (15 in decimal) into the accumulator.
+
 ### Comments ###
-Comments in AS4 start with a semicolon, ";".
+Comments in AS4 start with a semicolon, ";" or an octothorp, "#".
 
 ### Example code ###
 ```nasm

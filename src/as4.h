@@ -42,6 +42,7 @@ typedef struct _label
 {
 	uint16_t addr;
 	char *str;
+	uint16_t offset;
 } label;
 
 /* Help() prints the help. More useful in large programs */

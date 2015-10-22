@@ -132,8 +132,8 @@ int main(int argc, char **argv)
 					/* Loop until we've gotten every token on this line. */
 					while(tokens != NULL)
 					{
-						/* If we get to a ; on the line, ignore the rest. Allows inline comments */
-						if(tokens[0] == ';')
+						/* If we get to a ; or # on the line, ignore the rest. Allows inline comments */
+						if(tokens[0] == ';' || tokens[0] == '#')
 						{
 							break;
 						}
@@ -268,7 +268,7 @@ int main(int argc, char **argv)
 							/* A very niche but important instruction. */
 							else if(!strncmp(tokens, "CXA", 4))
 							{
-								/* We only need to understand that it's the halt instruction, we don't care about the rest of the line. */
+								/* We only need to understand that it's the carry and XOR to accumulator instruction, we don't care about the rest of the line. */
 								doneline = 1;
 								/* Add the instruction to the output buffer. */
 								addinst(outbuf, CXA, NOADDR, &bits, &bytes);
@@ -698,8 +698,8 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 					{
 						/* If it is, then take stock of both the address it was referenced */
 						unsigned short int instaddress = (*unknownlabels)[i].addr;
-						/* And the address the label points to. */
-						unsigned short int labeladdr = (*labels)[(*numlabels) - 1].addr;
+						/* And the address the label points to plus the requested offset. */
+						unsigned short int labeladdr = (*labels)[(*numlabels) - 1].addr + (*unknownlabels)[i].offset;
 						
 						/* The address it was referenced at is actually the opcode of the instruction, so go up one nibble to point to the address section. */
 						instaddress++;
@@ -751,7 +751,9 @@ unsigned short int findlabel(label **unknownlabels, label **labels, const char *
 	unsigned short int address = UNKNOWNADDR;
 	/* tempaddress is what is assigned to the return value of strtol. We use this value if we find that the token after the assembly instruction is actually a number. */
 	unsigned short int tempaddress = address;
-	
+	/* offset stores the offset in nibbles from the specific label. */
+	unsigned short int offset = 0;	
+
 	/* Set errno to 0 so we can check for errors from strtol, which will tell us if the token after the assembly instruction is a number or a label (if it's neither we find out a bit later, not in this function). */
 	errno = 0;
 	/* tempaddress is 0 if the labelstr is actually a label and not a value. */
@@ -773,10 +775,26 @@ unsigned short int findlabel(label **unknownlabels, label **labels, const char *
 		/* Remove any possible whitespace */
 		for(i = 0; i < strlen(tempstr); i++)
 		{
-			if(isspace(tempstr[i]))
+			if(isspace(tempstr[i]) != 0)
 			{
 				tempstr[i] = '\0';
 				break;
+			}
+		}
+		/* Search for the square brackets to determine label offset */
+		for(i = 0; i < strlen(tempstr); i++)
+		{
+			if(tempstr[i] == '[')
+			{
+				offset = strtol(tempstr + ((i + 1) * sizeof(char)), &endptr, 16);
+				/* Check the offset is in the correct form. If the last character isn't ] for both where we stopped reading the string to find the offest value and where the string ends, then it's wrong. */
+ 				/* If both are ], but they're not pointing to the same place (ie: LABEL[HEX_OFFSET]uh oh]) then it's still wrong. */
+				if((*endptr) != ']' || tempstr[strlen(tempstr) - 1] != ']' || (tempstr + ((strlen(tempstr) - 1) * sizeof(char))) != endptr)
+				{
+					fprintf(stderr, "Line %llu: Label offsets must be declared in the form LABEL[HEX_OFFSET].\n", FILELINE);
+					exit(26);
+				}
+				tempstr[i] = '\0';
 			}
 		}
 		/* Check that the pointer to the pointer to the collection of labels is valid .*/
@@ -794,8 +812,8 @@ unsigned short int findlabel(label **unknownlabels, label **labels, const char *
 						/* Check to see if any names match the one we are looking for. */
 						if(!strcmp((*labels)[i].str, tempstr))
 						{
-							/* If they are, use the address the label points to. */
-							address = (*labels)[i].addr;
+							/* If they are, use the address the label points to and add the offset we want. */
+							address = (*labels)[i].addr + offset;
 						}
 					}
 				}
@@ -823,6 +841,8 @@ unsigned short int findlabel(label **unknownlabels, label **labels, const char *
 					(*unknownlabels)[0].str = tempstr;
 					/* and the current location, so the unknown address number can be replaced later. */
 					(*unknownlabels)[0].addr = (bits/4);
+					/* and the offset, so we can add it later. */
+					(*unknownlabels)[0].offset = offset;
 					/* We have one unknown label now, so record that. */
 					(*numunknownlabels) = 1;
 				}
@@ -846,6 +866,8 @@ unsigned short int findlabel(label **unknownlabels, label **labels, const char *
 					(*unknownlabels)[(*numunknownlabels) - 1].str = tempstr;
 					/* And where we used it. */
 					(*unknownlabels)[(*numunknownlabels) - 1].addr = (bits/4);
+					/* And the offset */
+					(*unknownlabels)[(*numunknownlabels) - 1].offset = offset;
 				}
 			}
 		}
