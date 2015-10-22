@@ -31,7 +31,7 @@
 /* These are the default memory locations for memory locations when nothing is specified */
 #ifdef NICEMISTAKES
 #define NOADDR 0x4444 
-#elif
+#else
 #define NOADDR 0x0000
 #endif
 #define UNKNOWNADDR 0xFFFF

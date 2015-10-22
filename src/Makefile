@@ -9,7 +9,6 @@ export EXTRALDFLAGS
 
 all: debug
 
-
 fast: phony
 	$(MAKE) -f Makefile.fast.gcc
 
