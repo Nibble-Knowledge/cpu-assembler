@@ -1,4 +1,4 @@
-SRC=as4.c
+SRC=as4.c num.c label.c output.c
 EXE=as4
 EXTRACFLAGS=
 EXTRALDFLAGS=

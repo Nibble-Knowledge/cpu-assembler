@@ -1,2 +1,2 @@
-LOD beep[0x2]
-beep: .data 3 2
+LOD beep[0d2]
+beep: .data 0o3 0b1110

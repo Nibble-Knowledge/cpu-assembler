@@ -30,6 +30,7 @@ The Nibble Knowledge CPU has 8 instructions which are split into two different t
 ### 2 data types ###
 AS4 recognises two inbuilt data types:
 * Numberical values. Format: ".data SIZE INITIALVALUE"
+	* .data can also be used to create a static reference to a label. The SIZE must be 4. The format is ".data SIZE LABEL" or ".data SIZE LABEL[OFFSET]". This will save the static 16-bit memory location pointed to by LABEL or LABEL + OFFSET to the .data section.
 * Strings, both plain and zero terminated. Format: ".ascii "String"" or ".asciiz "String""
 	* Strings must start and end with double quotes.
 	* AS4 recognises standard escape characters
@@ -42,12 +43,17 @@ Labels when referenced in instructions can be used in two forms:
 * INST LABEL
 	* Where the instruction INST simply references the memory location pointed to by LABEL
 * INST LABEL[OFFSET]
-	* Where the instruction INST references the memory location pointed to by LABEL + OFFSET. OFFSET must be a hexidecimal value, optionally preceded by "0x".
+	* Where the instruction INST references the memory location pointed to by LABEL + OFFSET. OFFSET is usually a hexidecimal value, optionally preceded by "0x". To use a binary value, prefix with "0b". For an octal value, prefix "0" or "0o". For a decimal value, prefix "0d".
 
 An example of usage would be "LOD sum[F]", which loads the memory address pointed to by "sum" plus the offset of "F" (15 in decimal) into the accumulator.
 
 ### Comments ###
 Comments in AS4 start with a semicolon, ";" or an octothorp, "#".
+
+### Numbers ###
+AS4 accepts binary, octal, hexadecimal and binary numbers. Binary numbers must always be preceded by "0b" and octal by "0" or "0o". The rules for decimal and hexadecimal vary depending on use case.
+* When used for an offset, in the form LABEL[OFFSET], it is assumed the default is hexadecimal. Thus, hexadecimal numbers can be written with or without a preceding "0x". Decimal numbers must be written with a preceding "0d".
+* In all other cases, decimal is assumed to be the default. "0d" can optionally precede the decimal number. Hexadecimal numbers must be written with a preceding "0x".
 
 ### Example code ###
 ```nasm
