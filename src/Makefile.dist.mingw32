@@ -1,0 +1,14 @@
+CC=i686-pc-mingw32-gcc
+FASTFLAGS=-m32 -Os -s -static -march=native -fomit-frame-pointer -pipe -Wdisabled-optimization
+CFLAGS=$(FASTFLAGS) $(EXTRACFLAGS) -c
+LDFLAGS=$(FASTFLAGS) $(EXTRALDFLAGS)
+SRC+=getline.c
+OBJ=$(SRC:.c=.o)
+
+all: $(SRC) $(EXE)
+
+$(EXE): $(OBJ)
+	$(CC) $(OBJ) -o $@ $(LDFLAGS)
+
+%.o: %.c
+	$(CC) $(CFLAGS) $< -o $@

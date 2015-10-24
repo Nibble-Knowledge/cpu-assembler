@@ -1,3 +1,5 @@
+as4.c, label.c, num.c, and output.c are released under The Unlicense detailed below.
+
 This is free and unencumbered software released into the public domain.
 
 Anyone is free to copy, modify, publish, use, compile, sell, or
@@ -23,3 +25,4 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 For more information, please refer to <http://unlicense.org>
 
+getline.c is used under the terms of the GPL2. It is only used for the Windows binary distribution.

@@ -1,26 +1,23 @@
-SRC=as4.c num.c label.c output.c
 EXE=as4
-EXTRACFLAGS=
-EXTRALDFLAGS=
-export SRC
-export EXE
-export EXTRACFLAGS
-export EXTRALDFLAGS
-
+SRCDIR=src
 all: fast
 
 
 fast: phony
-	$(MAKE) -C src fast
-	cp src/as4 .
+	$(MAKE) -C $(SRCDIR) fast
+	cp $(SRCDIR)/$(EXE) .
 
 debug: phony
 	$(MAKE) -C src
-	cp src/as4 .
+	cp $(SRCDIR)/$(EXE) .
+
+distw32: phony
+	$(MAKE) -C $(SRCDIR) distw32
+	cp $(SRCDIR)/$(EXE) .
 
 clean:
-	$(MAKE) -C src clean
-	rm -rf as4 gmon.out
+	$(MAKE) -C $(SRCDIR) clean
+	rm -rf $(EXE) gmon.out
 
 phony: 
 	true
