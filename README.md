@@ -5,7 +5,7 @@ The assembler for the Nibble Knowledge CPU.
 AS4
 ---
 
-AS4 is the low level assembler on written in C99 for the Nibble Knowledge CPU. It is under 700 lines of executable code, and recognises only 12 constructs:
+AS4 is the low level assembler on written in C99 for the Nibble Knowledge CPU. It is under 1000 lines of executable code, and recognises only 12 language constructs.
 
 ### Useage ###
 There are only two invocations of as4:
