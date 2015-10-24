@@ -1,5 +1,6 @@
 EXE=as4
 SRCDIR=src
+
 all: fast
 
 
