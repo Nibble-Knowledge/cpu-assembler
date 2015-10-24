@@ -404,6 +404,10 @@ int main(int argc, char **argv)
 			}
 			/* Next line - increment FILELINE. */
 			FILELINE++;
+			/* Free line and set len to zero - otherwise we are leaking memory. */
+			free(line);
+			line = NULL;
+			len = 0;
 			/* And get another line. */
 			linelen = getline(&line, &len, input);
 		}
