@@ -27,6 +27,40 @@ The Nibble Knowledge CPU has 8 instructions which are split into two different t
 	* LOD: Load the accumulator with the nibble at the specified address.
 	* STR: Store the nibble in the accumulator to the specified memory address.
 
+
+### Pseudo instructions ###
+To aid in disassembly a new metadata format for binary files is now included in the assembler as of v1.1.0.
+* INF - the information section must start with this, and this should be the first instruction of any file.
+* PINF - the start of the executable information section. Any unknown tuples within the executable information section are treated as pseudo instructions with a data field.
+* BADR - The base address of the binary file. Must be in the executable data section.
+* EPINF - the end of the executable information section.
+* DSEC - the memory location of the data section which should succeed the text section. Should be a label so that it is modified by the base address and can be reliably disassembled. If there is no data section, this should point to the end of the file.
+* Data section descriptors:
+	* DNUM -  the amount of data sections of the following size
+	* DSIZE -  the size
+	* There should be as many DNUM/DSIZE pairs as there are unique groups of data sections. The example below is illustrative. These pairs must be in the same order as the data sections themselves.
+* EINF - end of the information section.
+
+An example is below:
+```nasm
+INF
+PINF
+BADR 0x40
+EPINF
+DSEC datastart
+DNUM 0x2
+DSIZE 0x3
+DNUM 0x1
+DSIZE 0x9
+EINF
+LOD hello
+LOD isitmeyourelookingfor
+datastart:
+hello: .data 3 0x2
+isitmeyourelookingfor: .data 3 0x2
+.data 9 0x0
+```
+
 ### 2 data types ###
 AS4 recognises two inbuilt data types:
 * Numberical values. Format: ".data SIZE INITIALVALUE"
