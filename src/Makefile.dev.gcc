@@ -17,7 +17,6 @@ DEVFLAGS=-std=c99 -ggdb3 -pg -O0 -Wall -Wextra -pedantic -Wdeclaration-after-sta
 CFLAGS=$(DEVFLAGS) $(EXTRACFLAGS) -c
 LDFLAGS=$(DEVFLAGS) $(EXTRALDFLAGS) -lgcov
 OBJ=$(SRC:.c=.o)
-
 all: $(SRC) $(EXE)
 
 $(EXE): $(OBJ)
