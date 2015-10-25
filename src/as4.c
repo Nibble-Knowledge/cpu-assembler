@@ -59,13 +59,15 @@ int main(int argc, char **argv)
 		label *labels = NULL;
 		/* Pointer to the collection of referenced and potentially valid but undeclared labels */
 		label *unknownlabels = NULL;
-		
+		/* If we are in a PINF, treat every unknown tuple as a pseudo instruction with a data field. */
+		unsigned char inpinf = 0;
+		/* endptr is used to check if numbers are valid. */
+		char *endptr = NULL;
+
 		/* Check if a base address has been specified */
 		if(!strncmp(argv[1], "-b", 3))
 		{
-			/* We use this endptr to check if the input is valid */
 			/* strtoul sets this endptr to the address of the first invalid character - if that's equal to argv[2], the entire string was invalid. */
-			char *endptr = NULL;
 			
 			/* If yes, out input and output arguments are two elements farther in the array so increment arg */
 			arg += 2;
@@ -226,6 +228,136 @@ int main(int argc, char **argv)
 								/* Add the instruction to the output buffer. */
 								addinst(outbuf, NOP, NOADDR, &bits, &bytes);
 							}
+							/* Start of the information section. Save as NOP with address 0xFFFF so the processor isn't bothered but we can tell later. */
+							else if(!strncmp(tokens, "INF", 4))
+							{
+								/* ignore anything after INF on this line */
+								doneline = 1;
+								/* Add this to the output buffer. */
+								addinst(outbuf, NOP, 0xFFFF, &bits, &bytes);
+
+							}
+							/* Start of the program information section within the information section. Save as a NOP with address 0xFFFF so the processor isn't bothered but we can tell later. */
+							else if(!strncmp(tokens, "PINF", 5))
+							{
+								/* ignore anything after PINF on this line. */
+								doneline = 1;
+								/* Within the PINF...EPINF section, treat all unknown tuples as psuedo-instructions with a data section. */
+								inpinf = 1;
+								/* Add this to the output buffer */
+								addinst(outbuf, NOP, 0xFFFF, &bits, &bytes);
+
+							}
+							/* Record the base address into the executable. If the base address is specified externally, use that. */
+							else if(!strncmp(tokens, "BADR", 5))
+							{
+
+								tokens = strtok(NULL, delims);
+								/* Check firstly that there is a valid label or address after the instruction. */
+								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								{
+									fprintf(stderr, "Line %llu: A memory address must succeed a BADR instruction.\n", FILELINE);
+									exit(33);
+								}
+								/* Get the address location. */
+								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
+								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
+								/* If it's an already declared label return the address relative to the base address. */
+								/* If allow program argument baseaddr to take precedence */
+								if(baseaddr == 0)
+								{
+									baseaddr = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, INST);
+								}
+								/* Add this to the output buffer. */
+								addinst(outbuf, NOP, baseaddr, &bits, &bytes);
+
+
+							}
+							/* End of the program information section within the information section. Save as a NOP with address 0xFFFF so the processor isn't bothered but we can tell later. */
+							else if(!strncmp(tokens, "EPINF", 6))
+							{
+								/* ignore everything after EPINF on this line. */
+								doneline = 1;
+								/* We're out of the PINF, actually ignore unknowns now. */
+								inpinf = 0;
+								/* Add to the output buffer */
+								addinst(outbuf, NOP, 0xFFFF, &bits, &bytes);
+
+							}
+							/* Record the start of the data section. Allows easier disassembly. */
+							else if(!strncmp(tokens, "DSEC", 5))
+							{
+								tokens = strtok(NULL, delims);
+								/* Check firstly that there is a valid label or address after the instruction. */
+								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								{
+									fprintf(stderr, "Line %llu: A memory address must succeed a DSEC instruction.\n", FILELINE);
+									exit(34);
+								}
+								/* Get the address location. */
+								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
+								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
+								/* If it's an already declared label return the address relative to the base address. */
+								address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, INST);
+								/* Add this to the output buffer. */
+								addinst(outbuf, NOP, address, &bits, &bytes);
+
+							}
+							/* Each group of same size data sections should be recorded with the pair DNUM DSIZE */
+							else if(!strncmp(tokens, "DNUM", 5))
+							{
+								tokens = strtok(NULL, delims);
+								/* Check firstly that there is a valid label or address after the instruction. */
+								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								{
+									fprintf(stderr, "Line %llu: A number of data fields must succeed a DNUM instruction.\n", FILELINE);
+									exit(35);
+								}
+								/* Should just be a number - no labels! */
+								address = estrtoul(tokens, &endptr, STDHEX);
+								if(tokens == endptr)
+								{
+									fprintf(stderr, "Line %llu: A invalid number of data sections for DNUM.\n", FILELINE);
+									exit(37);
+
+								}
+								/* Add this to the output buffer. */
+								addinst(outbuf, NOP, address, &bits, &bytes);
+
+							}
+							/* Each group of same size data sections should be recorded with the pair DNUM DSIZE */
+							else if(!strncmp(tokens, "DSIZE", 6))
+							{
+								tokens = strtok(NULL, delims);
+								/* Check firstly that there is a valid label or address after the instruction. */
+								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								{
+									fprintf(stderr, "Line %llu: A size must succeed a DSIZE instruction.\n", FILELINE);
+									exit(36);
+								}		
+								/* Should just be a number - no labels! */
+								address = estrtoul(tokens, &endptr, STDHEX);
+								if(tokens == endptr)
+								{
+									fprintf(stderr, "Line %llu: A invalid size of data sections for DSIZE.\n", FILELINE);
+									exit(38);
+
+								}
+								/* Add this to the output buffer. */
+								addinst(outbuf, NOP, address, &bits, &bytes);
+
+							}
+							/* End of the information section. Record it. */
+							else if(!strncmp(tokens, "EINF", 5))
+							{
+								/* Nothing else on this line matters */
+								doneline = 1;
+								/* Just in case someone forgot EPINF... */
+								inpinf = 0;
+								/* Add it to the buffer. */
+								addinst(outbuf, NOP, 0xFFFF, &bits, &bytes);
+
+							}
 							/* Nand instruction. */
 							else if(!strncmp(tokens, "NND", 4))
 							{
@@ -280,8 +412,6 @@ int main(int argc, char **argv)
 								unsigned long long datasize = 0;
 								/* Initial value */
 								long long datavalue = 0;
-								/* endptr for determining if the number used for initilisation is valid */
-								char *endptr = NULL;
 								
 								/* Once we're done dealing with the .data element, we will have taken every useful token from this line, so declared the line done. */
 								doneline = 1;
@@ -390,6 +520,24 @@ int main(int argc, char **argv)
 							{
 								/* Add the label to the list of known labels and replace any references to it with it's actual address. */
 								addlabel(outbuf, &labels, &unknownlabels, &numlabels, numunknownlabels, tokens, bits, baseaddr);
+							}
+							else if(inpinf)
+							{
+								/* Get the next token, which is likely a label (though it could be a number) */
+								tokens = strtok(NULL, delims);
+								/* Check firstly that there is a valid label or address after the instruction. */
+								/* If not, assume the pseudo instruction wants a 0 data field */
+								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								{
+									address = 0;
+								}
+								/* Get the address location. */
+								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
+								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
+								/* If it's an already declared label return the address relative to the base address. */
+								address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, INST);
+								/* Add this to the output buffer. */
+								addinst(outbuf, NOP, address, &bits, &bytes);
 							}
 							/* If we're done the line, don't both getting another token. */
 							if(doneline)
