@@ -531,11 +531,14 @@ int main(int argc, char **argv)
 								{
 									address = 0;
 								}
-								/* Get the address location. */
-								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
-								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
-								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, INST);
+								else
+								{
+									/* Get the address location. */
+									/* If it's just a number after the instruction, that will be returned with the base address added to it. */
+									/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
+									/* If it's an already declared label return the address relative to the base address. */
+									address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, INST);
+								}
 								/* Add this to the output buffer. */
 								addinst(outbuf, NOP, address, &bits, &bytes);
 							}
