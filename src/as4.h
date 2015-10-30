@@ -75,4 +75,7 @@ long estrtol(char *str, char **endptr, uint8_t type);
 
 unsigned long estrtoul(char *str, char **endptr, uint8_t type);
 
+/* Whitespace trimming function. */
+char *trim(char *str);
+
 #endif /* _AS4_H_ */

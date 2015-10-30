@@ -134,6 +134,9 @@ int main(int argc, char **argv)
 					/* Loop until we've gotten every token on this line. */
 					while(tokens != NULL)
 					{
+						/* Trim the whitespace */
+						tokens = trim(tokens);
+
 						/* If we get to a ; or # on the line, ignore the rest. Allows inline comments */
 						if(tokens[0] == ';' || tokens[0] == '#')
 						{
@@ -640,6 +643,50 @@ int main(int argc, char **argv)
 	}
 	return 0;	
 	/* This is the end of successful program execution. */
+}
+
+/* Whitespace trimming function. */
+char *trim(char *str)
+{
+	unsigned int i = 0;
+	unsigned int j = 0;
+	char empty[1] = {'\0'};
+	char *retstr = NULL;
+
+	if(str == NULL)
+	{
+		return NULL;
+	}
+	/* Trim leading whitespace */
+	while(isspace((unsigned char)str[i]))
+	{	
+		i++;
+		/* If we travel past the end of the string, the string is empty. */
+		if(i > strlen(str))
+		{
+			retstr = empty;
+			return retstr;
+		}
+	}
+	retstr = calloc(1, strlen(str));
+	if(retstr == NULL)
+	{
+		perror("Could not allocate memory");
+		exit(4);
+	}
+	/* Trim trailing whitespace. */
+	for(i = i, j = 0; i < strlen(str) && j < strlen(str); i++, j++)
+	{
+		if(isspace((unsigned char)str[i]))
+		{
+			break;
+		}
+		retstr[j] = str[i];
+	}
+	/* Terminate the string here as it is the end, and stop some potential weirdness. */
+	retstr[j] = '\0';
+	
+	return retstr;
 }
 
 /* Help() prints the help. More useful in large programs */
