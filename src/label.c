@@ -78,9 +78,15 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 	/* Assign the current location of the output buffer to as the address, because then the label will point to the next instruction or data element added, which is what we want. */
 	/* Also add the base address, which is important. */
 	(*labels)[(*numlabels) - 1].addr = ((bits/4) + baseaddr);
-	/* If the label is for N_, then don't add anything to the output buffer but set N_START. */
+	/* If the label is for N_, set N_START. */
 	if(!(strcmp(tempstr, "N_")))
 	{
+		/* If we've defined it already, don't let redefinition. */
+		if(N_START != 0xFFFF)
+		{
+			fprintf(stderr, "Line %llu: N_ already defined!.\n", FILELINE);
+			exit(45);
+		}
 		N_START = ((bits/4) + baseaddr);
 	}
 	/* Now we've saved the declared label, we can check for it being used before it was declared. */
@@ -194,6 +200,7 @@ unsigned short int findlabel(label **unknownlabels, label **labels, char *labels
 				break;
 			}
 		}
+		
 		/* Search for the square brackets to determine label offset */
 		for(i = 0; i < strlen(tempstr); i++)
 		{
