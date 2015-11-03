@@ -40,9 +40,13 @@
 /* When we are using labels references labels, we need account for the 4 nibble size instead of 5 for an instruction */
 #define INST 0
 #define LABEL 1
+#define ADDROF 2
 
-/* The singular global variable - what line of the assembly file we are on. Helps with error messages */
+/* What line of the assembly file we are on. Helps with error messages */
 extern unsigned long long FILELINE;
+/* Where the N_ section starts. Used for address-of operations. */
+extern uint16_t N_START;
+
 
 /* This is the data structure used to identify labels */
 typedef struct _label
@@ -51,6 +55,7 @@ typedef struct _label
 	char *str;
 	uint16_t offset;
 	uint8_t type;
+	uint16_t addroffset;
 } label;
 
 /* Help() prints the help. More useful in large programs */

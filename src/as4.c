@@ -3,6 +3,7 @@
 /* This is the main file */
 
 unsigned long long FILELINE = 0;
+uint16_t N_START = 0xFFFF;
 
 /* Let's get ready to party */
 int main(int argc, char **argv)
@@ -306,6 +307,22 @@ int main(int argc, char **argv)
 								addinst(outbuf, NOP, address, &bits, &bytes);
 
 							}
+							/* Find where the N_ section starts */
+							else if(!strncmp(tokens, "NSTART", 7))
+							{
+								tokens = strtok(NULL, delims);
+								/* Check firstly that there is a valid label or address after the instruction. */
+								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								{
+									fprintf(stderr, "Line %llu: A memory address must succeed a DSEC instruction.\n", FILELINE);
+									exit(34);
+								}
+								/* Get the address location. */
+								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
+								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
+								/* If it's an already declared label return the address relative to the base address. */
+								N_START = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, INST);
+							}
 							/* Each group of same size data sections should be recorded with the pair DNUM DSIZE */
 							else if(!strncmp(tokens, "DNUM", 5))
 							{
@@ -357,9 +374,22 @@ int main(int argc, char **argv)
 								doneline = 1;
 								/* Just in case someone forgot EPINF... */
 								inpinf = 0;
-								/* Add it to the buffer. */
+								/* Prevent the address of EINF from getting written over... */
+								if(unknownlabels != NULL)
+								{
+									for(i = 0; i < numunknownlabels; i++)
+									{
+										if((unknownlabels[i].str != NULL) && (!strcmp(unknownlabels[i].str, "N_")) && (unknownlabels[i].addr == (bits/4)))
+										{
+											char *emptystr = calloc(1, 2);
+											memcpy(emptystr, "", 2);
+											unknownlabels[i].str = emptystr;
+											unknownlabels[i].addr = 0xFFFF;
+										}	
+									}
+								}
+								/* Add to output buffer. */
 								addinst(outbuf, NOP, 0xFFFF, &bits, &bytes);
-
 							}
 							/* Nand instruction. */
 							else if(!strncmp(tokens, "NND", 4))
@@ -593,7 +623,8 @@ int main(int argc, char **argv)
 					if(labels[j].str != NULL)
 					{
 						/* If we find it, set found to true. */
-						if(!strcmp(labels[j].str, unknownlabels[i].str))
+						/* if both str is "" and addr is 0xFFFF, this was an unknown label we were meant to ignore. */
+						if(!strcmp(labels[j].str, unknownlabels[i].str) || (!strcmp("", unknownlabels[i].str) && (unknownlabels[i].addr == 0xFFFF)))
 						{
 							foundunknown = 1;
 						}

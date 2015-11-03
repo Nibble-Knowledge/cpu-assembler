@@ -78,6 +78,11 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 	/* Assign the current location of the output buffer to as the address, because then the label will point to the next instruction or data element added, which is what we want. */
 	/* Also add the base address, which is important. */
 	(*labels)[(*numlabels) - 1].addr = ((bits/4) + baseaddr);
+	/* If the label is for N_, then don't add anything to the output buffer but set N_START. */
+	if(!(strcmp(tempstr, "N_")))
+	{
+		N_START = ((bits/4) + baseaddr);
+	}
 	/* Now we've saved the declared label, we can check for it being used before it was declared. */
 	/* But if there is no output buffer, we can't do much. */
 	if(outbuf == NULL)
@@ -94,7 +99,7 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 			for(i = 0; i < numunknownlabels; i++)
 			{
 				/* If the unknown label name exits (otherwise it would be hard to identify it)... */
-				if((*unknownlabels)[i].str != NULL)
+				if((*unknownlabels)[i].str != NULL && strcmp((*unknownlabels)[i].str, ""))
 				{
 					/* Check if the name of the unknown label is the same as the label that we just had declared. */
 					if(!strcmp((*unknownlabels)[i].str, tempstr))
