@@ -122,6 +122,7 @@ int main(int argc, char **argv)
 			/* These are the whitespace delimited tokens in each line that we process into machine code */
 			/* like LOD and .data */
 			char *tokens;
+			char *trimed;
 			
 			/* There is no useful line that is less than 2 characters long. */
 			if(strlen(line) >= 2)
@@ -135,30 +136,30 @@ int main(int argc, char **argv)
 					while(tokens != NULL)
 					{
 						/* Trim the whitespace */
-						tokens = trim(tokens);
+						trimed = trim(tokens);
 
 						/* If we get to a ; or # on the line, ignore the rest. Allows inline comments */
-						if(tokens[0] == ';' || tokens[0] == '#')
+						if(trimed[0] == ';' || trimed[0] == '#')
 						{
 							break;
 						}
 						/* Again make sure the token is work dealing with */
-						else if(tokens[0] != '\n' && tokens[0] != '\r')
+						else if(trimed[0] != '\n' && trimed[0] != '\r')
 						{
 							/* Length of the token (useful for things) */
-							size_t tokenlen = strlen(tokens);
+							size_t tokenlen = strlen(trimed);
 							/* Certain assembly instructions don't require us to check the rest of the line, like NOP, so when we encounter these just add the instruction to the output buffer and go to the next line. */
 							int doneline = 0;
 							/* The address component of the instruction. Used in all instructions (though sometimes set to 0 and ignored). */
 							unsigned short int address = 0;
 							/* Remove the trailing newline. I think this was used more for displaying tokens during development, but it doesn't hurt. */
-							if(tokens[tokenlen - 1] == '\n')
+							if(trimed[tokenlen - 1] == '\n')
 							{
-								tokens[tokenlen - 1] = '\0';
+								trimed[tokenlen - 1] = '\0';
 							}
 							/* Halt instruction */
 							/* Easy one */
-							if(!strncmp(tokens, "HLT", 4))
+							if(!strncmp(trimed, "HLT", 4))
 							{
 								/* We only need to understand that it's the halt instruction, we don't care about the rest of the line. */
 								doneline = 1;
@@ -166,12 +167,14 @@ int main(int argc, char **argv)
 								addinst(outbuf, HLT, NOADDR, &bits, &bytes);
 							}
 							/* Load instruction */
-							else if(!strncmp(tokens, "LOD", 4))
+							else if(!strncmp(trimed, "LOD", 4))
 							{
+								free(trimed);
 								/* Get the next token, which is likely a label (though it could be a number) */
 								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
 								/* Check firstly that there is a valid label or address after the instruction. */
-								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
 								{
 									/* If not, print an error and quit. */
 									fprintf(stderr, "Line %llu: A memory address must succeed a LOD instruction.\n", FILELINE);
@@ -181,17 +184,19 @@ int main(int argc, char **argv)
 								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
 								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
 								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, INST);
+								address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
 								/* Add this to the output buffer. */
 								addinst(outbuf, LOD, address, &bits, &bytes);
 							}
 							/* Store instruction. */
-							else if(!strncmp(tokens, "STR", 4))
+							else if(!strncmp(trimed, "STR", 4))
 							{
+								free(trimed);
 								/* Get the next token, which is likely a label (though it could be a number) */
 								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
 								/* Check firstly that there is a valid label or address after the instruction. */
-								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
 								{
 									fprintf(stderr, "Line %llu: A memory address must succeed a STR instruction.\n", FILELINE);
 									exit(12);
@@ -200,17 +205,19 @@ int main(int argc, char **argv)
 								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
 								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
 								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, INST);
+								address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
 								/* Add this to the output buffer. */
 								addinst(outbuf, STR, address, &bits, &bytes);
 							}
 							/* Add instruction. */
-							else if(!strncmp(tokens, "ADD", 4))
+							else if(!strncmp(trimed, "ADD", 4))
 							{
+								free(trimed);
 								/* Get the next token, which is likely a label (though it could be a number) */
 								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
 								/* Check firstly that there is a valid label or address after the instruction. */
-								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
 								{
 									fprintf(stderr, "Line %llu: A memory address must succeed a ADD instruction.\n", FILELINE);
 									exit(13);
@@ -219,12 +226,12 @@ int main(int argc, char **argv)
 								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
 								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
 								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, INST);
+								address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
 								/* Add this to the output buffer. */
 								addinst(outbuf, ADD, address, &bits, &bytes);
 							}
 							/* No-operation instruction */
-							else if(!strncmp(tokens, "NOP", 4))
+							else if(!strncmp(trimed, "NOP", 4))
 							{
 								/* We only need to understand that it's the nop instruction, we don't care about the rest of the line. */
 								doneline = 1;
@@ -232,7 +239,7 @@ int main(int argc, char **argv)
 								addinst(outbuf, NOP, NOADDR, &bits, &bytes);
 							}
 							/* Start of the information section. Save as NOP with address 0xFFFF so the processor isn't bothered but we can tell later. */
-							else if(!strncmp(tokens, "INF", 4))
+							else if(!strncmp(trimed, "INF", 4))
 							{
 								/* ignore anything after INF on this line */
 								doneline = 1;
@@ -241,7 +248,7 @@ int main(int argc, char **argv)
 
 							}
 							/* Start of the program information section within the information section. Save as a NOP with address 0xFFFF so the processor isn't bothered but we can tell later. */
-							else if(!strncmp(tokens, "PINF", 5))
+							else if(!strncmp(trimed, "PINF", 5))
 							{
 								/* ignore anything after PINF on this line. */
 								doneline = 1;
@@ -252,12 +259,14 @@ int main(int argc, char **argv)
 
 							}
 							/* Record the base address into the executable. If the base address is specified externally, use that. */
-							else if(!strncmp(tokens, "BADR", 5))
+							else if(!strncmp(trimed, "BADR", 5))
 							{
 
+								free(trimed);
 								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
 								/* Check firstly that there is a valid label or address after the instruction. */
-								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
 								{
 									fprintf(stderr, "Line %llu: A memory address must succeed a BADR instruction.\n", FILELINE);
 									exit(33);
@@ -269,7 +278,7 @@ int main(int argc, char **argv)
 								/* If allow program argument baseaddr to take precedence */
 								if(baseaddr == 0)
 								{
-									baseaddr = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, INST);
+									baseaddr = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
 								}
 								/* Add this to the output buffer. */
 								addinst(outbuf, NOP, baseaddr, &bits, &bytes);
@@ -277,7 +286,7 @@ int main(int argc, char **argv)
 
 							}
 							/* End of the program information section within the information section. Save as a NOP with address 0xFFFF so the processor isn't bothered but we can tell later. */
-							else if(!strncmp(tokens, "EPINF", 6))
+							else if(!strncmp(trimed, "EPINF", 6))
 							{
 								/* ignore everything after EPINF on this line. */
 								doneline = 1;
@@ -288,11 +297,13 @@ int main(int argc, char **argv)
 
 							}
 							/* Record the start of the data section. Allows easier disassembly. */
-							else if(!strncmp(tokens, "DSEC", 5))
+							else if(!strncmp(trimed, "DSEC", 5))
 							{
+								free(trimed);
 								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
 								/* Check firstly that there is a valid label or address after the instruction. */
-								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
 								{
 									fprintf(stderr, "Line %llu: A memory address must succeed a DSEC instruction.\n", FILELINE);
 									exit(34);
@@ -301,24 +312,26 @@ int main(int argc, char **argv)
 								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
 								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
 								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, INST);
+								address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
 								/* Add this to the output buffer. */
 								addinst(outbuf, NOP, address, &bits, &bytes);
 
 							}
 							/* Each group of same size data sections should be recorded with the pair DNUM DSIZE */
-							else if(!strncmp(tokens, "DNUM", 5))
+							else if(!strncmp(trimed, "DNUM", 5))
 							{
+								free(trimed);
 								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
 								/* Check firstly that there is a valid label or address after the instruction. */
-								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
 								{
 									fprintf(stderr, "Line %llu: A number of data fields must succeed a DNUM instruction.\n", FILELINE);
 									exit(35);
 								}
 								/* Should just be a number - no labels! */
-								address = estrtoul(tokens, &endptr, STDHEX);
-								if(tokens == endptr)
+								address = estrtoul(trimed, &endptr, STDHEX);
+								if(trimed == endptr)
 								{
 									fprintf(stderr, "Line %llu: A invalid number of data sections for DNUM.\n", FILELINE);
 									exit(37);
@@ -329,18 +342,20 @@ int main(int argc, char **argv)
 
 							}
 							/* Each group of same size data sections should be recorded with the pair DNUM DSIZE */
-							else if(!strncmp(tokens, "DSIZE", 6))
+							else if(!strncmp(trimed, "DSIZE", 6))
 							{
+								free(trimed);
 								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
 								/* Check firstly that there is a valid label or address after the instruction. */
-								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
 								{
 									fprintf(stderr, "Line %llu: A size must succeed a DSIZE instruction.\n", FILELINE);
 									exit(36);
 								}		
 								/* Should just be a number - no labels! */
-								address = estrtoul(tokens, &endptr, STDHEX);
-								if(tokens == endptr)
+								address = estrtoul(trimed, &endptr, STDHEX);
+								if(trimed == endptr)
 								{
 									fprintf(stderr, "Line %llu: A invalid size of data sections for DSIZE.\n", FILELINE);
 									exit(38);
@@ -351,7 +366,7 @@ int main(int argc, char **argv)
 
 							}
 							/* End of the information section. Record it. */
-							else if(!strncmp(tokens, "EINF", 5))
+							else if(!strncmp(trimed, "EINF", 5))
 							{
 								/* Nothing else on this line matters */
 								doneline = 1;
@@ -362,12 +377,14 @@ int main(int argc, char **argv)
 
 							}
 							/* Nand instruction. */
-							else if(!strncmp(tokens, "NND", 4))
+							else if(!strncmp(trimed, "NND", 4))
 							{
+								free(trimed);
 								/* Get the next token, which is likely a label (though it could be a number) */
 								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
 								/* Check firstly that there is a valid label or address after the instruction. */
-								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
 								{
 									fprintf(stderr, "Line %llu: A memory address must succeed a NND instruction.\n", FILELINE);
 									exit(14);
@@ -376,17 +393,19 @@ int main(int argc, char **argv)
 								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
 								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
 								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, INST);
+								address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
 								/* Add this to the output buffer. */
 								addinst(outbuf, NND, address, &bits, &bytes);
 							}
 							/* Jump instruction */
-							else if(!strncmp(tokens, "JMP", 4))
+							else if(!strncmp(trimed, "JMP", 4))
 							{
+								free(trimed);
 								/* Get the next token, which is likely a label (though it could be a number) */
 								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
 								/* Check firstly that there is a valid label or address after the instruction. */
-								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
 								{
 									fprintf(stderr, "Line %llu: A memory address must succeed a JMP instruction.\n", FILELINE);
 									exit(15);
@@ -395,13 +414,13 @@ int main(int argc, char **argv)
 								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
 								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
 								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, INST);
+								address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
 								/* Add this to the output buffer. */
 								addinst(outbuf, JMP, address, &bits, &bytes);
 							}
 							/* Carry and XOR bits to Accumulator instruction */
 							/* A very niche but important instruction. */
-							else if(!strncmp(tokens, "CXA", 4))
+							else if(!strncmp(trimed, "CXA", 4))
 							{
 								/* We only need to understand that it's the carry and XOR to accumulator instruction, we don't care about the rest of the line. */
 								doneline = 1;
@@ -409,7 +428,7 @@ int main(int argc, char **argv)
 								addinst(outbuf, CXA, NOADDR, &bits, &bytes);
 							}
 							/* .data arbitrary data section inputs */
-							else if(!strncmp(tokens, ".data", 6))
+							else if(!strncmp(trimed, ".data", 6))
 							{
 								/* Size of the data section */
 								unsigned long long datasize = 0;
@@ -418,10 +437,12 @@ int main(int argc, char **argv)
 								
 								/* Once we're done dealing with the .data element, we will have taken every useful token from this line, so declared the line done. */
 								doneline = 1;
+								free(trimed);
 								/* Get the next token (which should be the size of the .data element). */
 								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
 								/* Check that the token is valid. */
-								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
 								{
 									/* If not, warn the user. And quit. */
 									fprintf(stderr, "Line %llu: Both a size and a value must be declared for a .data element.\n", FILELINE);
@@ -430,18 +451,20 @@ int main(int argc, char **argv)
 								/* Errno can be set non-zero for many reasons. Set it to zero now so we can check the result of strtoul. */
 								errno = 0;
 								/* Try to get the size of the data element */
-								datasize = estrtoul(tokens, &endptr, STDHEX);
+								datasize = estrtoul(trimed, &endptr, STDHEX);
 								/* Check the data size is valid by checking both errno and if the string was simply invalid (tokens == endptr, endptr points to the first invalid character) */
-								if(errno != 0 || tokens == endptr)
+								if(errno != 0 || trimed == endptr)
 								{
 									/* If either is true, warn the user and quit. */
 									fprintf(stderr, "Line %llu: Both a size and a value must be declared for a .data element or an invalid value was used.\n", FILELINE);
 									exit(7);
 								}
+								free(trimed);
 								/* Get the next token (which should be the initial value of the .data element). */
 								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
 								/* Check that the token is valid. */
-								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
 								{
 									/* If not, warn the user. And quit. */
 									fprintf(stderr, "Line %llu: Both a size and a value must be declared for a .data element.\n", FILELINE);
@@ -450,9 +473,9 @@ int main(int argc, char **argv)
 								/* Errno can be set non-zero for many reasons. Set it to zero now so we can check the result of strtoul. */
 								errno = 0;
 								/* Try to get the initial value of the data element */
-								datavalue = estrtol(tokens, &endptr, STDHEX);
+								datavalue = estrtol(trimed, &endptr, STDHEX);
 								/* If tokens == endptr, this isn't a number, so it should be a label. */
-								if(errno != 0 || tokens == endptr)
+								if(errno != 0 || trimed == endptr)
 								{
 									/* However, if the storage size isn't 4, the programmer isn't using this correctly. */
 									if(datasize != 4)
@@ -462,8 +485,9 @@ int main(int argc, char **argv)
 										exit(31);
 									}
 									/* Otherwise, try and get the address of that label. */
-									datavalue = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, LABEL);
+									datavalue = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, LABEL);
 								}
+								free(trimed);
 								/* Get the next token as this will probably be a newline, and this speeds up the reading process for the next line. */
 								tokens = strtok(NULL, delims);
 								/* After we have gotten the size and initial value, add this to the output buffer. */
@@ -471,7 +495,7 @@ int main(int argc, char **argv)
 							}
 							/* .ascii and .asciiz string data sections. */
 							/* .asciiz is the zero terminated version. */
-							else if(!strncmp(tokens, ".ascii", 7) || !strncmp(tokens, ".asciiz", 8))
+							else if(!strncmp(trimed, ".ascii", 7) || !strncmp(trimed, ".asciiz", 8))
 							{
 								/* Zero termination flag */
 								char zeroterm = 0;
@@ -479,26 +503,30 @@ int main(int argc, char **argv)
 								char *string = calloc(1, (size_t)linelen);
 								
 								/* If it's .asciiz, set the zero termination flag. */
-								if(!strncmp(tokens, ".asciiz", 8))
+								if(!strncmp(trimed, ".asciiz", 8))
 								{
 									zeroterm = 1;
 								}
+								free(trimed);
 								/* Get the next token, which should be the string. */
 								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
 								/* Check if it is simply an empty string */
-								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0')
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0')
 								{
 									/* If it is quit and print an error. */
 									fprintf(stderr, "Line %llu: A string is required after .ascii or .asciiz.\n", FILELINE);
 									exit(15);
 								}
 								/* If it's a space, it might just be a weird whitespace glitch. */
-								else if(tokens[0] == ' ')
+								else if(trimed[0] == ' ')
 								{
+									free(trimed);
 									/* So try to get the token again. */
 									tokens = strtok(NULL, delims);
+									trimed = trim(tokens);
 									/* If it's still invalid, there is probably no string there. */
-									if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+									if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
 									{
 										/* Complain and quit. */
 										fprintf(stderr, "Line %llu: A string is required after .ascii or .asciiz.\n", FILELINE);
@@ -506,31 +534,40 @@ int main(int argc, char **argv)
 									}
 								}
 								/* Loop until we reach the end of the line. */
-								while(!(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0'))
+								while(!(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0'))
 								{
 									/* Concatenate all the tokens on this line together with their missing whitespace to make the actual stored string. */
-									strcat(string, tokens);
-									strcat(string, " ");
+									strcat(string, trimed);
+									free(trimed);
 									tokens = strtok(NULL, delims);
+									trimed = trim(tokens);
+									if(!(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0'))
+									{
+										strcat(string, " ");
+									}
+									else
+									{
+										break;
+									}
 								}
-								/* And null terminate it (and cut off the trailing newline) */
-								string[strlen(string) - 2] = '\0';
 								/* Add it to the output buffer. */
 								addstring(outbuf, string, zeroterm, &bits, &bytes);
 							}
 							/* If the currently token ends in an colon, it's probably a label. */
-							else if(tokens[strlen(tokens)-1] == ':')
+							else if(trimed[strlen(trimed)-1] == ':')
 							{
 								/* Add the label to the list of known labels and replace any references to it with it's actual address. */
-								addlabel(outbuf, &labels, &unknownlabels, &numlabels, numunknownlabels, tokens, bits, baseaddr);
+								addlabel(outbuf, &labels, &unknownlabels, &numlabels, numunknownlabels, trimed, bits, baseaddr);
 							}
 							else if(inpinf)
 							{
+								free(trimed);
 								/* Get the next token, which is likely a label (though it could be a number) */
 								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
 								/* Check firstly that there is a valid label or address after the instruction. */
 								/* If not, assume the pseudo instruction wants a 0 data field */
-								if(tokens == NULL || tokens[0] == '\n' || tokens[0] == '\r' || tokens[0] == '\0' || tokens[0] == ' ')
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
 								{
 									address = 0;
 								}
@@ -540,7 +577,7 @@ int main(int argc, char **argv)
 									/* If it's just a number after the instruction, that will be returned with the base address added to it. */
 									/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
 									/* If it's an already declared label return the address relative to the base address. */
-									address = findlabel(&unknownlabels, &labels, tokens, numlabels, &numunknownlabels, bits, INST);
+									address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
 								}
 								/* Add this to the output buffer. */
 								addinst(outbuf, NOP, address, &bits, &bytes);
@@ -552,6 +589,7 @@ int main(int argc, char **argv)
 							}
 						}
 						/* But if we're not done the line, get another token. */
+						free(trimed);
 						tokens = strtok(NULL, delims);
 					}
 				}	
@@ -668,7 +706,7 @@ char *trim(char *str)
 			return retstr;
 		}
 	}
-	retstr = calloc(1, strlen(str));
+	retstr = calloc(1, strlen(str) + 1);
 	if(retstr == NULL)
 	{
 		perror("Could not allocate memory");
@@ -685,7 +723,6 @@ char *trim(char *str)
 	}
 	/* Terminate the string here as it is the end, and stop some potential weirdness. */
 	retstr[j] = '\0';
-	
 	return retstr;
 }
 
