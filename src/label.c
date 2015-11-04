@@ -111,7 +111,8 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 					if(!strcmp((*unknownlabels)[i].str, tempstr))
 					{
 						
-												/* If it is, then take stock of both the address it was referenced. If a label is referencing a label, we need to move 1 nibble back (as there is no instruction, just 4 nibbles). Cheaper than doing an if below. */
+						printf("%s: %s\n", tempstr, (*unknownlabels)[i].str);
+						/* If it is, then take stock of both the address it was referenced. If a label is referencing a label, we need to move 1 nibble back (as there is no instruction, just 4 nibbles). Cheaper than doing an if below. */
 						unsigned short int instaddress = (*unknownlabels)[i].addr - ((*unknownlabels)[i].type & 1);
 						/* And the address the label points to plus the requested offset. We need to add one nibble if it is an instruction referencing a nibble as we moved one back above. */
 						unsigned short int labeladdr = (*labels)[(*numlabels) - 1].addr + (*unknownlabels)[i].offset + ((*unknownlabels)[i].type & 1);
@@ -124,6 +125,7 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 								char *nstr = calloc(1, 6);
 								sprintf(nstr, "N_[%X]", ((labeladdr >> (3 - (*unknownlabels)[i].addroffset) & 0xF)));
 								labeladdr = findlabel(unknownlabels, labels, nstr, (*numlabels), numunknownlabels, bits, ((*unknownlabels)[i].type) & 1);
+								continue;
 							}
 							else
 							{
