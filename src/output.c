@@ -150,7 +150,7 @@ void addstring(char *outbuf, char *string, char zeroterm, unsigned long long *bi
 		exit(17);
 	}
 	/* Handle each character. */
-	for(i = 1; i < (strlen(string) - 1); i++)
+	for(i = 1; i < strlen(string) - 1; i++)
 	{
 		/* Handle escape characters */
 		/* They all start with a \ */

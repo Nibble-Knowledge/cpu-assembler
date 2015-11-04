@@ -190,17 +190,17 @@ unsigned short int findlabel(label **unknownlabels, label **labels, char *labels
 			exit(9);
 		}
 		/* Copy the name of the label into the temporary string pointer for comparison. */
-		memcpy(tempstr, labelstr, strlen(labelstr));
 		/* Remove any possible whitespace */
-		for(i = 0; i < strlen(tempstr); i++)
+		for(i = 0; i < strlen(labelstr); i++)
 		{
-			if(isspace((unsigned char)tempstr[i]))
+			if(isspace((unsigned char)labelstr[i]))
 			{
-				tempstr[i] = '\0';
 				break;
 			}
+			tempstr[i] = labelstr[i];
 		}
 		
+		tempstr[i] = '\0';
 		/* Search for the square brackets to determine label offset */
 		for(i = 0; i < strlen(tempstr); i++)
 		{
