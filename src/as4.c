@@ -587,7 +587,7 @@ int main(int argc, char **argv)
 							else if(trimed[strlen(trimed)-1] == ':')
 							{
 								/* Add the label to the list of known labels and replace any references to it with it's actual address. */
-								addlabel(outbuf, &labels, &unknownlabels, &numlabels, numunknownlabels, trimed, bits, baseaddr);
+								addlabel(outbuf, &labels, &unknownlabels, &numlabels, &numunknownlabels, trimed, bits, baseaddr);
 							}
 							else if(inpinf)
 							{

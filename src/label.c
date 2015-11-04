@@ -4,7 +4,7 @@
 
 /* addlabel() adds a label to the collection of labels, to be used by other functions when a label reference is made. */
 /* Additionally, if there are outstanding "queries" for a certain label (if the label has been used before it has been declared) it replaces the "unknown address" address in an instruction with the address of the label on declaration */
-void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long long *numlabels, unsigned long long numunknownlabels, char *labelstr, unsigned long long bits, unsigned short int baseaddr)
+void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long long *numlabels, unsigned long long *numunknownlabels, char *labelstr, unsigned long long bits, unsigned short int baseaddr)
 {
 	/* This is the pointer to the label string, which is used for comparison and assigned to it's element in the collection when we are finished. */
 	char *tempstr = NULL;
@@ -102,7 +102,7 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 		if((*unknownlabels) != NULL)
 		{
 			/* Check every unknown label. */
-			for(i = 0; i < numunknownlabels; i++)
+			for(i = 0; i < (*numunknownlabels); i++)
 			{
 				/* If the unknown label name exits (otherwise it would be hard to identify it)... */
 				if((*unknownlabels)[i].str != NULL && strcmp((*unknownlabels)[i].str, ""))
@@ -110,11 +110,26 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 					/* Check if the name of the unknown label is the same as the label that we just had declared. */
 					if(!strcmp((*unknownlabels)[i].str, tempstr))
 					{
-						/* If it is, then take stock of both the address it was referenced. If a label is referencing a label, we need to move 1 nibble back (as there is no instruction, just 4 nibbles). Cheaper than doing an if below. */
-						unsigned short int instaddress = (*unknownlabels)[i].addr - (*unknownlabels)[i].type;
-						/* And the address the label points to plus the requested offset. We need to add one nibble if it is an instruction referencing a nibble as we moved one back above. */
-						unsigned short int labeladdr = (*labels)[(*numlabels) - 1].addr + (*unknownlabels)[i].offset + (*unknownlabels)[i].type;
 						
+												/* If it is, then take stock of both the address it was referenced. If a label is referencing a label, we need to move 1 nibble back (as there is no instruction, just 4 nibbles). Cheaper than doing an if below. */
+						unsigned short int instaddress = (*unknownlabels)[i].addr - ((*unknownlabels)[i].type & 1);
+						/* And the address the label points to plus the requested offset. We need to add one nibble if it is an instruction referencing a nibble as we moved one back above. */
+						unsigned short int labeladdr = (*labels)[(*numlabels) - 1].addr + (*unknownlabels)[i].offset + ((*unknownlabels)[i].type & 1);
+						/* If we are doing an address of operation... */
+						if(((*unknownlabels)[i].type & 2))
+						{
+							/* If N_START is not defined, we don't know how to load just a number. Wait until we do by storing a label to be found later... */
+							if(N_START == 0xFFFF)
+							{
+								char *nstr = calloc(1, 6);
+								sprintf(nstr, "N_[%X]", ((labeladdr >> (3 - (*unknownlabels)[i].addroffset) & 0xF)));
+								labeladdr = findlabel(unknownlabels, labels, nstr, (*numlabels), numunknownlabels, bits, ((*unknownlabels)[i].type) & 1);
+							}
+							else
+							{
+								labeladdr = ((labeladdr >> (3 - (*unknownlabels)[i].addroffset) & 0xF)) + N_START;	
+							}
+						}
 						/* The address it was referenced at is actually the opcode of the instruction, so go up one nibble to point to the address section. */
 						instaddress++;
 						/* Since the instaddress is actually what nibble is being addressed, we correctly address a byte every 2 nibbles. */
@@ -166,7 +181,8 @@ unsigned short int findlabel(label **unknownlabels, label **labels, char *labels
 	/* tempaddress is what is assigned to the return value of strtol. We use this value if we find that the token after the assembly instruction is actually a number. */
 	unsigned short int tempaddress = address;
 	/* offset stores the offset in nibbles from the specific label. */
-	unsigned short int offset = 0;	
+	unsigned short int offset = 0;
+	unsigned short int addroffset = 0;
 
 	if(type > 1)
 	{
@@ -198,9 +214,76 @@ unsigned short int findlabel(label **unknownlabels, label **labels, char *labels
 				break;
 			}
 			tempstr[i] = labelstr[i];
-		}
-		
+		}		
 		tempstr[i] = '\0';
+		
+		/* Check to see if this is an address of operation */
+		if(tempstr[0] == '&')
+		{
+			/* The formatting for this operation is very specific and we can find failures in multiple levels of parsing */
+			/* Have one value we set */
+			unsigned char formatcorrect = 0;
+			
+			/* The second character must be a ( */
+			if(tempstr[1] == '(')
+			{
+				/* Go until we find the ), which encompasses the label we are taking the address of */
+				for(i = 2; i < strlen(tempstr); i++)
+				{
+					if(tempstr[i] == ')')
+					{
+						/* If the ) is right beside the end of the string, it means that it is in the form &(LABEL). This is ok */
+						if(tempstr[i+1] == '\0')
+						{
+							formatcorrect = 1;
+						}
+						/* If the ) is right beside [, the string should be in the form &(LABEL)[ADDRESS_OFFSET] */
+						else if(tempstr[i+1] == '[')
+						{
+							/* Try to convert the offset */
+							addroffset = estrtol(tempstr + ((i + 2) * sizeof(char)), &endptr, NSTDHEX);
+							/* If the value is valid (there is a convertable number)... */
+							if(tempstr != endptr)
+							{
+								/* And if the first invalid character was ] and then the string ends, this is correctly in the form &(LABEL)[ADDRESS_OFFSET] */
+								if(endptr[0] == ']' && endptr[1] == '\0')
+								{
+									/* However, the offset must be between 0 and 3 as addresses are 4 nibbles. */
+									if(addroffset > 3 || addroffset < 0)
+									{
+										fprintf(stderr, "Line %llu: The offset of an address of operation must be between 0 and 4.\n", FILELINE);
+										exit(51);
+									}
+									formatcorrect = 1;
+								}
+							}
+						}
+					}
+					if(formatcorrect)
+					{
+						/* Bitwise or ADDROF (which is 2) to the type. We can use this in addlabel to know if we are doing an address of operation. */
+						type |= ADDROF;
+						/* Strip the address of parts from this string so we can use the rest of the function to correctly fill the string, address and offset parts of the unknownlabel structure. */
+						for(i = 2; i < strlen(tempstr); i++)
+						{
+							if(tempstr[i] == ')')
+							{
+								tempstr[i-2] = '\0';
+								break;
+							}
+							tempstr[i-2] = tempstr[i];
+						}
+					}
+				}
+			}
+			/* If the string has not passed all the trials, punish the user. */
+			if(formatcorrect = 0)
+			{
+				fprintf(stderr, "Line %llu: Format of an address of operation must be &(LABEL[OFFSET])[ADDRESS_OFFSET].\n", FILELINE);
+				exit(52);
+			}
+		}
+
 		/* Search for the square brackets to determine label offset */
 		for(i = 0; i < strlen(tempstr); i++)
 		{
