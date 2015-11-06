@@ -28,6 +28,7 @@ The Nibble Knowledge CPU has 8 instructions which are split into two different t
 	* STR: Store the nibble in the accumulator to the specified memory address.
 
 
+
 ### Pseudo instructions ###
 To aid in disassembly a new metadata format for binary files is now included in the assembler as of v1.1.0.
 * INF - the information section must start with this, and this should be the first instruction of any file.
@@ -80,6 +81,13 @@ Labels when referenced in instructions can be used in two forms:
 	* Where the instruction INST references the memory location pointed to by LABEL + OFFSET. OFFSET is usually a hexidecimal value, optionally preceded by "0x". To use a binary value, prefix with "0b". For an octal value, prefix "0" or "0o". For a decimal value, prefix "0d".
 
 An example of usage would be "LOD sum[F]", which loads the memory address pointed to by "sum" plus the offset of "F" (15 in decimal) into the accumulator.
+
+### Address of operations ###
+As all programs built by AS4 are assumed to be static, non-relocatable binary files, the addresses pointed by labels can be calculated at assemble time and used statically. The form is below:
+* &(LABEL[OFFSET])[ADDRESS_OFFSET]
+	* LABEL[OFFSET] is the same as for the standard label usage. &() indicates this is an address of operation, and [ADDRESS_OFFSET] is what 4-bit portion of the 16-bit address you want. Both [OFFSET] and [ADDRESS_OFFSET] are optional, without them an offset of zero is assumed.
+
+This loads a corresponding value from the table of static values - for example, if the address of the label "Carmen" is 0x00FE, and you use the address of operation LOD &(Carmen)[1], you would load "0xF" into the accumulator; which is the same as using the instruction LOD N_[F] when the N_ static number series is defined.
 
 ### Comments ###
 Comments in AS4 start with a semicolon, ";" or an octothorp, "#".

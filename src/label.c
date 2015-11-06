@@ -111,7 +111,6 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 					if(!strcmp((*unknownlabels)[i].str, tempstr))
 					{
 						
-						printf("%s: %s\n", tempstr, (*unknownlabels)[i].str);
 						/* If it is, then take stock of both the address it was referenced. If a label is referencing a label, we need to move 1 nibble back (as there is no instruction, just 4 nibbles). Cheaper than doing an if below. */
 						unsigned short int instaddress = (*unknownlabels)[i].addr - ((*unknownlabels)[i].type & 1);
 						/* And the address the label points to plus the requested offset. We need to add one nibble if it is an instruction referencing a nibble as we moved one back above. */
@@ -123,13 +122,14 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 							if(N_START == 0xFFFF)
 							{
 								char *nstr = calloc(1, 6);
-								sprintf(nstr, "N_[%X]", ((labeladdr >> (3 - (*unknownlabels)[i].addroffset) & 0xF)));
-								labeladdr = findlabel(unknownlabels, labels, nstr, (*numlabels), numunknownlabels, bits, ((*unknownlabels)[i].type) & 1);
+								/* As this is getting a portion of the address of the label accessed, we get the label's address and bitwise and that section then shift it back. */
+								sprintf(nstr, "N_[%X]", (labeladdr & (0xF << ((*unknownlabels)[i].addroffset * 4))) >> ((*unknownlabels)[i].addroffset * 4));
+								labeladdr = findlabel(unknownlabels, labels, nstr, (*numlabels), numunknownlabels, instaddress * 4, ((*unknownlabels)[i].type) & 1);
 								continue;
 							}
 							else
 							{
-								labeladdr = ((labeladdr >> (3 - (*unknownlabels)[i].addroffset) & 0xF)) + N_START;	
+								labeladdr = (labeladdr & (0xF << ((*unknownlabels)[i].addroffset * 4))) >> ((*unknownlabels)[i].addroffset * 4) + N_START;
 							}
 						}
 						/* The address it was referenced at is actually the opcode of the instruction, so go up one nibble to point to the address section. */
@@ -349,6 +349,7 @@ unsigned short int findlabel(label **unknownlabels, label **labels, char *labels
 					(*unknownlabels)[0].addr = (bits/4);
 					/* and the offset, so we can add it later. */
 					(*unknownlabels)[0].offset = offset;
+					(*unknownlabels)[0].addroffset = addroffset;
 					/* and whether a label or instruction is referencing this */
 					(*unknownlabels)[0].type = type;
 					/* We have one unknown label now, so record that. */
@@ -376,6 +377,7 @@ unsigned short int findlabel(label **unknownlabels, label **labels, char *labels
 					(*unknownlabels)[(*numunknownlabels) - 1].addr = (bits/4);
 					/* And the offset */
 					(*unknownlabels)[(*numunknownlabels) - 1].offset = offset;
+					(*unknownlabels)[(*numunknownlabels) - 1].addroffset = addroffset;
 					/* and the type */
 					(*unknownlabels)[(*numunknownlabels) - 1].type = type;
 				}
