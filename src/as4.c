@@ -162,10 +162,24 @@ int main(int argc, char **argv)
 							/* Easy one */
 							if(!strncmp(trimed, "HLT", 4))
 							{
-								/* We only need to understand that it's the halt instruction, we don't care about the rest of the line. */
-								doneline = 1;
-								/* Add the instruction to the output buffer. */
-								addinst(outbuf, HLT, NOADDR, &bits, &bytes);
+								free(trimed);
+								/* Get the next token, which is likely a label (though it could be a number) */
+								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
+								/* Check firstly that there is a valid label or address after the instruction. */
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
+								{
+									/* Address is optional - if it isn't there, just put zeros. */
+									addinst(outbuf, HLT, NOADDR, &bits, &bytes);
+								}
+								/* Get the address location. */
+								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
+								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
+								/* If it's an already declared label return the address relative to the base address. */
+								address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
+								/* Add this to the output buffer. */
+								addinst(outbuf, HLT, address, &bits, &bytes);
+
 							}
 							/* Load instruction */
 							else if(!strncmp(trimed, "LOD", 4))
@@ -234,10 +248,24 @@ int main(int argc, char **argv)
 							/* No-operation instruction */
 							else if(!strncmp(trimed, "NOP", 4))
 							{
-								/* We only need to understand that it's the nop instruction, we don't care about the rest of the line. */
-								doneline = 1;
-								/* Add the instruction to the output buffer. */
-								addinst(outbuf, NOP, NOADDR, &bits, &bytes);
+								free(trimed);
+								/* Get the next token, which is likely a label (though it could be a number) */
+								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
+								/* Check firstly that there is a valid label or address after the instruction. */
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
+								{
+									/* Address is optional - if it isn't there, just put zeros. */
+									addinst(outbuf, NOP, NOADDR, &bits, &bytes);
+								}
+								/* Get the address location. */
+								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
+								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
+								/* If it's an already declared label return the address relative to the base address. */
+								address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
+								/* Add this to the output buffer. */
+								addinst(outbuf, NOP, address, &bits, &bytes);
+
 							}
 							/* Start of the information section. Save as NOP with address 0xFFFF so the processor isn't bothered but we can tell later. */
 							else if(!strncmp(trimed, "INF", 4))
@@ -280,11 +308,18 @@ int main(int argc, char **argv)
 								if(baseaddr == 0)
 								{
 									baseaddr = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
+									/* If the base address has changed, we should check if there are labels that have been declared before this that need adjustment. */
+									for(i = 0; i < numlabels; i++)
+									{
+										label *templabels = NULL;
+										unsigned long long templabelnum = 0;
+
+										addlabel(outbuf, &templabels, &unknownlabels, &templabelnum, &numunknownlabels, labels[i].str, (labels[i].addr * 4), baseaddr);
+										labels[i].addr = templabels[0].addr;
+									}
 								}
 								/* Add this to the output buffer. */
 								addinst(outbuf, NOP, baseaddr, &bits, &bytes);
-
-
 							}
 							/* End of the program information section within the information section. Save as a NOP with address 0xFFFF so the processor isn't bothered but we can tell later. */
 							else if(!strncmp(trimed, "EPINF", 6))
@@ -452,10 +487,23 @@ int main(int argc, char **argv)
 							/* A very niche but important instruction. */
 							else if(!strncmp(trimed, "CXA", 4))
 							{
-								/* We only need to understand that it's the carry and XOR to accumulator instruction, we don't care about the rest of the line. */
-								doneline = 1;
-								/* Add the instruction to the output buffer. */
-								addinst(outbuf, CXA, NOADDR, &bits, &bytes);
+								free(trimed);
+								/* Get the next token, which is likely a label (though it could be a number) */
+								tokens = strtok(NULL, delims);
+								trimed = trim(tokens);
+								/* Check firstly that there is a valid label or address after the instruction. */
+								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
+								{
+									/* Address is optional - if it isn't there, just put zeros. */
+									addinst(outbuf, CXA, NOADDR, &bits, &bytes);
+								}
+								/* Get the address location. */
+								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
+								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
+								/* If it's an already declared label return the address relative to the base address. */
+								address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
+								/* Add this to the output buffer. */
+								addinst(outbuf, CXA, address, &bits, &bytes);
 							}
 							/* .data arbitrary data section inputs */
 							else if(!strncmp(trimed, ".data", 6))

@@ -59,7 +59,16 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 		exit(5);
 	}
 	/* Copy the contains of the label's name, up until the zero terminator (our calloc gave us an all zero string array, so any data copied in is automatically zero terminated). */
-	memcpy(tempstr, labelstr, (strlen(labelstr) - 1));
+	strcpy(tempstr, labelstr);
+	/* Strip the trailing ":" */
+	for(i = 0; i < strlen(tempstr); i++)
+	{
+		if(tempstr[i] == ':')
+		{
+			tempstr[i] = '\0';
+			break;
+		}
+	}
 	/* Before we commit to keeping this label, check if we've used the name already. */
 	/* Because using the same label for two different locations makes no sense. */
 	for(i = 0; i < ((*numlabels) - 1); i++)
@@ -110,7 +119,6 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 					/* Check if the name of the unknown label is the same as the label that we just had declared. */
 					if(!strcmp((*unknownlabels)[i].str, tempstr))
 					{
-						
 						/* If it is, then take stock of both the address it was referenced. If a label is referencing a label, we need to move 1 nibble back (as there is no instruction, just 4 nibbles). Cheaper than doing an if below. */
 						unsigned short int instaddress = (*unknownlabels)[i].addr - ((*unknownlabels)[i].type & 1);
 						/* And the address the label points to plus the requested offset. We need to add one nibble if it is an instruction referencing a nibble as we moved one back above. */
