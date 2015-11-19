@@ -172,13 +172,16 @@ int main(int argc, char **argv)
 									/* Address is optional - if it isn't there, just put zeros. */
 									addinst(outbuf, HLT, NOADDR, &bits, &bytes);
 								}
-								/* Get the address location. */
-								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
-								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
-								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
-								/* Add this to the output buffer. */
-								addinst(outbuf, HLT, address, &bits, &bytes);
+								else
+								{
+									/* Get the address location. */
+									/* If it's just a number after the instruction, that will be returned with the base address added to it. */
+									/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
+									/* If it's an already declared label return the address relative to the base address. */
+									address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
+									/* Add this to the output buffer. */
+									addinst(outbuf, HLT, address, &bits, &bytes);
+								}
 
 							}
 							/* Load instruction */
@@ -258,13 +261,16 @@ int main(int argc, char **argv)
 									/* Address is optional - if it isn't there, just put zeros. */
 									addinst(outbuf, NOP, NOADDR, &bits, &bytes);
 								}
-								/* Get the address location. */
-								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
-								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
-								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
-								/* Add this to the output buffer. */
-								addinst(outbuf, NOP, address, &bits, &bytes);
+								else
+								{
+									/* Get the address location. */
+									/* If it's just a number after the instruction, that will be returned with the base address added to it. */
+									/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
+									/* If it's an already declared label return the address relative to the base address. */
+									address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
+									/* Add this to the output buffer. */
+									addinst(outbuf, NOP, address, &bits, &bytes);
+								}
 
 							}
 							/* Start of the information section. Save as NOP with address 0xFFFF so the processor isn't bothered but we can tell later. */
@@ -314,7 +320,7 @@ int main(int argc, char **argv)
 										label *templabels = NULL;
 										unsigned long long templabelnum = 0;
 
-										addlabel(outbuf, &templabels, &unknownlabels, &templabelnum, &numunknownlabels, labels[i].str, (labels[i].addr * 4), baseaddr);
+										addlabel(outbuf, &templabels, &unknownlabels, &templabelnum, &numunknownlabels, labels[i].str, (labels[i].addr * 4UL), baseaddr);
 										labels[i].addr = templabels[0].addr;
 									}
 								}
@@ -497,13 +503,16 @@ int main(int argc, char **argv)
 									/* Address is optional - if it isn't there, just put zeros. */
 									addinst(outbuf, CXA, NOADDR, &bits, &bytes);
 								}
-								/* Get the address location. */
-								/* If it's just a number after the instruction, that will be returned with the base address added to it. */
-								/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
-								/* If it's an already declared label return the address relative to the base address. */
-								address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
-								/* Add this to the output buffer. */
-								addinst(outbuf, CXA, address, &bits, &bytes);
+								else
+								{
+									/* Get the address location. */
+									/* If it's just a number after the instruction, that will be returned with the base address added to it. */
+									/* If it's a yet undeclared label, 65535 (UNKNOWNADDR) is returned. The instruction will be modified when the label is declared. */
+									/* If it's an already declared label return the address relative to the base address. */
+									address = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, INST);
+									/* Add this to the output buffer. */
+									addinst(outbuf, CXA, address, &bits, &bytes);
+								}
 							}
 							/* .data arbitrary data section inputs */
 							else if(!strncmp(trimed, ".data", 6))

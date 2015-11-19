@@ -132,12 +132,12 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 								char *nstr = calloc(1, 6);
 								/* As this is getting a portion of the address of the label accessed, we get the label's address and bitwise and that section then shift it back. */
 								sprintf(nstr, "N_[%X]", (labeladdr & (0xF << ((*unknownlabels)[i].addroffset * 4))) >> ((*unknownlabels)[i].addroffset * 4));
-								labeladdr = findlabel(unknownlabels, labels, nstr, (*numlabels), numunknownlabels, instaddress * 4, ((*unknownlabels)[i].type) & 1);
+								labeladdr = findlabel(unknownlabels, labels, nstr, (*numlabels), numunknownlabels, instaddress * 4UL, ((*unknownlabels)[i].type) & 1);
 								continue;
 							}
 							else
 							{
-								labeladdr = (labeladdr & (0xF << ((*unknownlabels)[i].addroffset * 4))) >> ((*unknownlabels)[i].addroffset * 4) + N_START;
+								labeladdr = ((labeladdr & (0xF << ((*unknownlabels)[i].addroffset * 4))) >> ((*unknownlabels)[i].addroffset * 4)) + N_START;
 							}
 						}
 						/* The address it was referenced at is actually the opcode of the instruction, so go up one nibble to point to the address section. */
@@ -199,6 +199,11 @@ unsigned short int findlabel(label **unknownlabels, label **labels, char *labels
 		fprintf(stderr, "findlabel: Type can only be 0 or 1\n");
 		exit(33);
 	}
+	if(labelstr == NULL)
+	{
+		fprintf(stderr, "findlabel: labelstr cannot be null!\n");
+		exit(34);
+	}
 	/* Set errno to 0 so we can check for errors from strtol, which will tell us if the token after the assembly instruction is a number or a label (if it's neither we find out a bit later, not in this function). */
 	errno = 0;
 	/* tempaddress is 0 if the labelstr is actually a label and not a value. */
@@ -259,9 +264,9 @@ unsigned short int findlabel(label **unknownlabels, label **labels, char *labels
 								if(endptr[0] == ']' && endptr[1] == '\0')
 								{
 									/* However, the offset must be between 0 and 3 as addresses are 4 nibbles. */
-									if(addroffset > 3 || addroffset < 0)
+									if(addroffset > 3)
 									{
-										fprintf(stderr, "Line %llu: The offset of an address of operation must be between 0 and 4.\n", FILELINE);
+										fprintf(stderr, "Line %llu: The offset of an address of operation must be between 0 and 3.\n", FILELINE);
 										exit(51);
 									}
 									formatcorrect = 1;
@@ -287,7 +292,7 @@ unsigned short int findlabel(label **unknownlabels, label **labels, char *labels
 				}
 			}
 			/* If the string has not passed all the trials, punish the user. */
-			if(formatcorrect = 0)
+			if(formatcorrect == 0)
 			{
 				fprintf(stderr, "Line %llu: Format of an address of operation must be &(LABEL[OFFSET])[ADDRESS_OFFSET].\n", FILELINE);
 				exit(52);
