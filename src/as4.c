@@ -532,7 +532,7 @@ int main(int argc, char **argv)
 								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
 								{
 									/* If not, warn the user. And quit. */
-									fprintf(stderr, "Line %llu: Both a size and a value must be declared for a .data element.\n", FILELINE);
+									fprintf(stderr, "Line %llu: Both a size must be declared for a .data element.\n", FILELINE);
 									exit(7);
 								}
 								/* Errno can be set non-zero for many reasons. Set it to zero now so we can check the result of strtoul. */
@@ -543,36 +543,33 @@ int main(int argc, char **argv)
 								if(errno != 0 || trimed == endptr)
 								{
 									/* If either is true, warn the user and quit. */
-									fprintf(stderr, "Line %llu: Both a size and a value must be declared for a .data element or an invalid value was used.\n", FILELINE);
+									fprintf(stderr, "Line %llu: Both a size must be declared for a .data element or an invalid value was used.\n", FILELINE);
 									exit(7);
 								}
 								free(trimed);
 								/* Get the next token (which should be the initial value of the .data element). */
 								tokens = strtok(NULL, delims);
 								trimed = trim(tokens);
-								/* Check that the token is valid. */
-								if(trimed == NULL || trimed[0] == '\n' || trimed[0] == '\r' || trimed[0] == '\0' || trimed[0] == ' ')
+								/* Check that the token is valid. If not, assume non-initalisation */
+								if(trimed != NULL && trimed[0] != '\n' && trimed[0] != '\r' && trimed[0] != '\0' && trimed[0] != ' ')
 								{
-									/* If not, warn the user. And quit. */
-									fprintf(stderr, "Line %llu: Both a size and a value must be declared for a .data element.\n", FILELINE);
-									exit(7);
-								}
-								/* Errno can be set non-zero for many reasons. Set it to zero now so we can check the result of strtoul. */
-								errno = 0;
-								/* Try to get the initial value of the data element */
-								datavalue = estrtol(trimed, &endptr, STDHEX);
-								/* If tokens == endptr, this isn't a number, so it should be a label. */
-								if(errno != 0 || trimed == endptr)
-								{
-									/* However, if the storage size isn't 4, the programmer isn't using this correctly. */
-									if(datasize != 4)
+									/* Errno can be set non-zero for many reasons. Set it to zero now so we can check the result of strtoul. */
+									errno = 0;
+									/* Try to get the initial value of the data element */
+									datavalue = estrtol(trimed, &endptr, STDHEX);
+									/* If tokens == endptr, this isn't a number, so it should be a label. */
+									if(errno != 0 || trimed == endptr)
 									{
-										/* Complain and die. */
-										fprintf(stderr, "Line %llu: When a .data declaration is used with a label, the storage size must be 4.\n", FILELINE);
-										exit(31);
+										/* However, if the storage size isn't 4, the programmer isn't using this correctly. */
+										if(datasize != 4)
+										{
+											/* Complain and die. */
+											fprintf(stderr, "Line %llu: When a .data declaration is used with a label, the storage size must be 4.\n", FILELINE);
+											exit(31);
+										}
+										/* Otherwise, try and get the address of that label. */
+										datavalue = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, LABEL);
 									}
-									/* Otherwise, try and get the address of that label. */
-									datavalue = findlabel(&unknownlabels, &labels, trimed, numlabels, &numunknownlabels, bits, LABEL);
 								}
 								free(trimed);
 								/* Get the next token as this will probably be a newline, and this speeds up the reading process for the next line. */
