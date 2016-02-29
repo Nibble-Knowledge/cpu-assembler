@@ -733,7 +733,7 @@ int main(int argc, char **argv)
 				/* We don't need it anymore. */
 				if(unknownlabels[i].str != NULL)
 				{
-					free(unknownlabels[i].str);
+					/*free(unknownlabels[i].str);*/
 				}
 			}
 			/* Once we've checked all the unknown labels, free the entire structure array. We don't need it anymore. */
