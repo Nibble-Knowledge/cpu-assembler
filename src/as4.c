@@ -754,7 +754,7 @@ int main(int argc, char **argv)
 			{
 				if(labels[i].str != NULL)
 				{
-					free(labels[i].str);
+					/*free(labels[i].str);*/
 				}
 			}
 			free(labels);
