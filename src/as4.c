@@ -729,35 +729,13 @@ int main(int argc, char **argv)
 					fprintf(stderr, "Used but undeclared label %s.\n", unknownlabels[i].str);
 					exit(20);
 				}
-				/* Once we have made sure this label has been declared correctly, free the allocated memory for the label string. */
-				/* We don't need it anymore. */
-				if(unknownlabels[i].str != NULL)
-				{
-					/*free(unknownlabels[i].str);*/
-				}
 			}
-			/* Once we've checked all the unknown labels, free the entire structure array. We don't need it anymore. */
-			free(unknownlabels);
 		}
 		
 		/* Once we're sure everything is in order, write the buffer to a file. */
 		for(i = 0; i < bytes; i++)
 		{
 			fputc(outbuf[i], output);
-		}
-		
-		/* Once we've written everything to a file, we don't need the known labels anymore, so get rid of them. */
-		/* Iterate through and free all the label things and the array itself. */
-		if(labels != NULL)
-		{
-			for(i = 0; i < numlabels; i++)
-			{
-				if(labels[i].str != NULL)
-				{
-					/*free(labels[i].str);*/
-				}
-			}
-			free(labels);
 		}
 		/* We now have no use for the output buffer, as we wrote it to a file. Set it free. */
 		free(outbuf);

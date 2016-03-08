@@ -131,13 +131,13 @@ void addlabel(char *outbuf, label **labels, label **unknownlabels, unsigned long
 							{
 								char *nstr = calloc(1, 6);
 								/* As this is getting a portion of the address of the label accessed, we get the label's address and bitwise and that section then shift it back. */
-								sprintf(nstr, "N_[%X]", (labeladdr & (0xF << ((*unknownlabels)[i].addroffset * 4))) >> ((*unknownlabels)[i].addroffset * 4));
+								sprintf(nstr, "N_[%X]", (labeladdr & (0xF << ( (3 - (*unknownlabels)[i].addroffset) * 4))) >> ( ( 3 - (*unknownlabels)[i].addroffset) * 4));
 								labeladdr = findlabel(unknownlabels, labels, nstr, (*numlabels), numunknownlabels, instaddress * 4UL, ((*unknownlabels)[i].type) & 1);
 								continue;
 							}
 							else
 							{
-								labeladdr = ((labeladdr & (0xF << ((*unknownlabels)[i].addroffset * 4))) >> ((*unknownlabels)[i].addroffset * 4)) + N_START;
+								labeladdr = ((labeladdr & (0xF << ((3 - (*unknownlabels)[i].addroffset) * 4))) >> ((3 - (*unknownlabels)[i].addroffset) * 4)) + N_START;
 							}
 						}
 						/* The address it was referenced at is actually the opcode of the instruction, so go up one nibble to point to the address section. */

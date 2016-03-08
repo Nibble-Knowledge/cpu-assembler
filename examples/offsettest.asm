@@ -1,2 +1,3 @@
-LOD beep[0d2]
-beep: .data 0o3 0b1110
+INF 1000
+LOD &(beep[0])[0]
+beep: .data 4 0xABCD
